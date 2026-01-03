@@ -1,66 +1,120 @@
 # NeuroCore
 
-NeuroCore is a high-performance, native macOS utility designed for structural binary analysis and visualization. By leveraging Metal Compute Shaders, the application performs real-time mapping of raw binary data onto a Hilbert Curve, enabling rapid visual identification of file structures, entropy distribution, and data anomalies.
+<p align="center">
+  <strong>High-Performance Structural Binary Analysis and Visualization Utility</strong>
+</p>
 
-If you find this tool useful for reverse engineering or security research, please consider starring the repository.
+---
 
-### Visual Analysis Example
+## Abstract
 
-![JSON Data Structure Analysis](https://github.com/farukalpay/NeuroCore/blob/main/img/img1.png?raw=true)
+NeuroCore is a native macOS utility engineered for the structural analysis of binary data through high-velocity visualization. By leveraging General-Purpose Computing on Graphics Processing Units (GPGPU) via Metal Compute Shaders, the application maps raw binary streams onto a Hilbert Space-Filling Curve in real-time. This projection facilitates the rapid identification of file taxonomy, entropy distribution, and cryptographic anomalies, addressing the limitations of linear hexadecimal representation.
 
-**Case Study: Large Structured JSON**
-In the screenshot above, NeuroCore is inspecting a 17.7 MB file identified as "Unknown Binary" by the OS, but revealed to be structured text by the visualizer.
+## Introduction
 
-* **The Color (Entropy 2.12):** The dominant **green/teal coloration** indicates low-to-mid entropy. Unlike encrypted data or compressed archives—which would render as high-entropy "red noise"—this file generates a calm, cool spectrum. This signals that the data contains high redundancy and predictable patterns.
-* **The Pattern:** The distinct, blocky textures on the Hilbert Curve are characteristic of **pretty-printed text**. The solid regions represent repeated sequences (such as whitespace indentation or recurring keys), while the scattered pixels represent variable data values.
-* **The Insight:** Even without reading the hex preview, the visual topography instantly confirms this is a **non-compressed, hierarchical text file** (in this case, a massive JSON dataset) rather than a compiled executable or random binary blob.
+Traditional hex editors present binary data in a linear, offset-based format, which obscures macro-scale structural patterns and data density. NeuroCore addresses this heuristic gap by projecting linear data into a two-dimensional topological space.
 
-## Overview
-
-Traditional hex editors provide a linear view of data, which makes spotting large-scale patterns or structural irregularities difficult. NeuroCore addresses this by projecting binary data into a 2D space using a Hilbert Space-Filling Curve. This transformation preserves data locality, meaning bytes adjacent in the linear stream remain adjacent in the 2D visualization.
-
-The rendering pipeline is fully accelerated via the GPU, utilizing custom Metal kernels to compute Shannon Entropy and pixel color values on-the-fly. This architecture allows for the smooth visualization of arbitrarily large files without the memory overhead associated with generating static textures.
-
-## Key Features
-
-* **Hardware-Accelerated Rendering:** Utilizes Metal Compute Shaders (MSL) to offload heavy entropy calculations and coordinate mapping to the GPU, ensuring 60fps performance even with large datasets.
-* **Hilbert Curve Mapping:** Transforms linear data into a 2D topography that preserves locality, making structural boundaries visually distinct.
-* **Entropy-Based Visualization:** Applies a sliding window heuristic to calculate local entropy, color-coding data segments to identify content type:
-    * **Red:** High Entropy (Encrypted data, compressed archives, high-randomness sequences).
-    * **Blue/Green:** Low to Mid Entropy (Machine code, plain text, headers, structured data).
-    * **Black:** Zero blocks (Null padding).
-* **Zero-Allocation Navigation:** Implements a "Virtual Window" technique within the shader pipeline. Offsets are calculated dynamically, allowing users to pan and zoom through gigabytes of data instantly without buffering the entire file into VRAM.
+The core projection relies on the **Hilbert Curve**, a continuous fractal space-filling curve. This mathematical transformation preserves **spatial locality**: data points that are adjacent in the linear memory stream remain strictly adjacent in the 2D visualization. This property allows analysts to visually parse the structural composition of a file—distinguishing between machine code, structured text, bitmaps, and high-entropy blocks—without parsing the file header.
 
 ## Technical Architecture
 
-NeuroCore is built as a native macOS application using Swift 5.5+ and direct Metal API calls.
+NeuroCore is architected as a high-performance native application, bypassing intermediate abstraction layers to interact directly with the GPU.
 
-* **Language:** Swift
-* **UI Framework:** SwiftUI (with `NSViewRepresentable` bridging).
-* **Graphics API:** Metal (Compute & Graphics Pipelines).
-* **Core Modules:**
-    * `Renderer.swift`: Manages the `MTLDevice`, command queues, pipeline state objects (PSO), and direct memory buffers.
-    * `ShaderSource.swift`: Contains the embedded Metal Shading Language kernel responsible for the parallel computation of the Hilbert mapping and entropy levels.
-    * `ContentView.swift`: Handles the view hierarchy and user input events.
+* **Language:** Swift 5.5+ (Strict Concurrency)
+* **Graphics Pipeline:** Metal API (Compute & Render Command Encoders)
+* **Interface:** SwiftUI with `NSViewRepresentable` bridging for metal layers.
+
+### Rendering Pipeline
+The rendering engine utilizes a custom Metal Shading Language (MSL) kernel to execute parallel computation of Shannon Entropy and coordinate mapping.
+1.  **Ingestion:** Raw binary data is streamed into `MTLBuffer` objects.
+2.  **Compute:** The GPU executes a sliding-window entropy calculation across the buffer.
+3.  **Mapping:** Linear offsets are transformed into $(x, y)$ coordinates using bitwise Hilbert mapping algorithms.
+4.  **Rasterization:** Pixel fragments are colored dynamically based on local entropy variance, achieving 60fps performance on arbitrarily large datasets without VRAM thrashing.
+
+---
+
+## Visual Data Analysis and Interpretation
+
+The following case studies demonstrate NeuroCore's efficacy in distinguishing file structures through entropy visualization.
+
+<br>
+
+<p align="center">
+  <img src="https://github.com/farukalpay/NeuroCore/blob/main/img/img1.png?raw=true" alt="JSON Data Structure Analysis" width="100%">
+  <br>
+  <em>Figure 1: Visualization of a 17.7 MB Unidentified Binary (Identified as Hierarchical JSON)</em>
+</p>
+
+### Case Study I: Low-Entropy Hierarchical Data
+**Subject:** 17.7 MB file classified as "Unknown" by the operating system.
+
+* **Entropy Signature (Low/Mid):** The visualization is dominated by the **green/teal spectrum**, indicative of an entropy score of $\approx 2.0 - 4.0$. Unlike encrypted blobs, this spectrum denotes high redundancy and predictability within the data stream.
+* **Topological Features:** The distinct geometric segmentation and "blocky" artifacts along the Hilbert Curve are characteristic of **pretty-printed text**. Solid regions represent recurring byte sequences (e.g., whitespace indentation, repeated keys), while scattered variations represent value changes.
+* **Conclusion:** The visual topography confirms the file is a **non-compressed, hierarchical text structure** (JSON dataset) rather than a compiled executable, nullifying the need for initial hex inspection.
+
+<br>
+<hr>
+<br>
+
+<p align="center">
+  <img src="https://github.com/farukalpay/NeuroCore/blob/main/img/img2.png?raw=true" alt="Compressed Binary Analysis" width="100%">
+  <br>
+  <em>Figure 2: Visualization of a 192 MB Apple Disk Image (.dmg)</em>
+</p>
+
+### Case Study II: High-Entropy Compressed Archives
+**Subject:** 192 MB `.dmg` volume.
+
+* **Entropy Signature (High):** The saturation of **red pixel data** signifies maximum entropy ($\approx 7.5 - 8.0$ bits per byte). While visually interpreted as "noise," this stochastic distribution indicates the effective elimination of data redundancy.
+* **Texture Uniformity:** The visualization lacks the geometric "islands" seen in Figure 1. Compression algorithms (e.g., LZFSE, zlib) distribute byte values uniformly to maximize storage efficiency, resulting in a field of high variance.
+* **Conclusion:** This visual density is the distinct signature of **packed executables, encrypted volumes, or compressed archives**. In a forensic context, observing this signature in a file purporting to be a standard document would immediately suggest steganographic payload injection or encryption.
+
+---
+
+## Key Features
+
+* **Hardware-Accelerated Compute:** Offloads entropy heuristics and coordinate transformation to the GPU via Metal Compute Shaders, ensuring real-time navigation.
+* **Hilbert Locality Preservation:** Transforms linear streams into 2D topography while maintaining neighbor relationships, making structural boundaries visually explicit.
+* **Entropy-Based Colorimetry:**
+    * **Red:** High Entropy (Encryption, Compression, RNG output).
+    * **Blue/Green:** Low-Mid Entropy (x86/ARM64 machine code, Text, Headers).
+    * **Black:** Null Space (Zero padding/allocation).
+* **Virtual Windowing:** Implements a zero-allocation navigation system. Offsets are calculated dynamically within the shader, allowing immediate traversal of gigabyte-scale files without pre-buffering full datasets into VRAM.
+
+## Use Cases
+
+1.  **Reverse Engineering:** Rapid localization of `.text` sections, embedded resources, or encrypted payloads within binary wrappers.
+2.  **Malware Analysis:** Visual identification of packers and obfuscation layers, which manifest as high-entropy anomalies distinct from standard compiled logic.
+3.  **Digital Forensics:** Detection of appended data (EOF overlays) or steganographic modifications that disrupt expected file structure patterns.
+4.  **Cryptographic Validation:** Visual verification of Random Number Generator (RNG) uniformity and compression algorithm efficiency.
 
 ## Installation and Build
 
-This project relies on standard macOS frameworks and does not require external package managers. You can build the application directly from the source using the Swift compiler.
+This project utilizes the native macOS toolchain and requires no external package managers.
 
 **Prerequisites:**
-* macOS 12.0 or later (Apple Silicon recommended for optimal shader performance).
-* Xcode Command Line Tools installed.
+* macOS 12.0 (Monterey) or higher.
+* Apple Silicon (M1/M2/M3) architecture recommended for optimal shader throughput.
+* Xcode Command Line Tools.
 
-**Build Command:**
+**Compilation:**
 
-Execute the following command in the project root to compile the source files and link the required frameworks (SwiftUI, Metal, MetalKit, AppKit, Foundation):
+Execute the following command in the project root to invoke the Swift compiler and link required frameworks (`SwiftUI`, `Metal`, `MetalKit`, `AppKit`, `Foundation`):
 
 ```bash
-swiftc NeuroCoreApp.swift ContentView.swift Renderer.swift ShaderSource.swift Utils.swift -o NeuroCore -sdk $(xcrun --show-sdk-path) -target arm64-apple-macos12.0 -framework SwiftUI -framework Metal -framework MetalKit -framework AppKit -framework Foundation
+swiftc NeuroCoreApp.swift ContentView.swift Renderer.swift ShaderSource.swift Utils.swift \
+-o NeuroCore \
+-sdk $(xcrun --show-sdk-path) \
+-target arm64-apple-macos12.0 \
+-framework SwiftUI \
+-framework Metal \
+-framework MetalKit \
+-framework AppKit \
+-framework Foundation
 
 ```
 
-**Run:**
+**Execution:**
 
 ```bash
 ./NeuroCore
@@ -69,23 +123,14 @@ swiftc NeuroCoreApp.swift ContentView.swift Renderer.swift ShaderSource.swift Ut
 
 ## Usage
 
-**1. Data Ingestion**
-Drag and drop any binary file (executables, disk images, archives, etc.) directly onto the application window. The visualization will update immediately.
+1. **Data Ingestion:** Drag and drop any binary target directly onto the visualization viewport. Rendering is instantaneous.
+2. **Navigation:**
+* **Pan:** Two-finger scroll (trackpad) or scroll wheel.
+* **Zoom:** Hold `Option` + Scroll to adjust the byte-per-pixel density.
 
-**2. Navigation**
 
-* **Pan:** Use the scroll wheel or trackpad to traverse the file structure.
-* **Zoom:** Hold the `Option` key while scrolling to adjust the zoom level (bytes per pixel).
-
-//screenshot of drag and drop interaction or zooming detail
-
-## Use Cases
-
-* **Reverse Engineering:** Quickly locate specific sections within a binary, such as encrypted payloads hidden within a wrapper or `.text` code sections.
-* **Malware Analysis:** visually identify packed or obfuscated regions which typically manifest as high-entropy blocks distinct from standard compiled code.
-* **Forensics & Steganography:** Detect anomalies or appended data at the end of files (EOF) that disrupt the expected visual pattern.
-* **Data Validation:** Verify the uniformity of random number generators or the effectiveness of compression algorithms visually.
 
 ## License
 
-All rights reserved. No commercial use allowed.
+**All rights reserved.**
+Unauthorized commercial use, redistribution, or modification is strictly prohibited.
