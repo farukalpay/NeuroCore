@@ -79,4 +79,4 @@ Drag and drop any binary file (executables, disk images, archives, etc.) directl
 
 ## License
 
-This project is open source. Please refer to the LICENSE file for details.
+All rights reserved. No commercial use allowed.
