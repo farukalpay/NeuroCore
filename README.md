@@ -47,15 +47,7 @@ This project relies on standard macOS frameworks and does not require external p
 Execute the following command in the project root to compile the source files and link the required frameworks (SwiftUI, Metal, MetalKit, AppKit, Foundation):
 
 ```bash
-swiftc NeuroCoreApp.swift ContentView.swift Renderer.swift ShaderSource.swift \
--o NeuroCore \
--sdk $(xcrun --show-sdk-path) \
--target arm64-apple-macos12.0 \
--framework SwiftUI \
--framework Metal \
--framework MetalKit \
--framework AppKit \
--framework Foundation
+swiftc NeuroCoreApp.swift ContentView.swift Renderer.swift ShaderSource.swift Utils.swift -o NeuroCore -sdk $(xcrun --show-sdk-path) -target arm64-apple-macos12.0 -framework SwiftUI -framework Metal -framework MetalKit -framework AppKit -framework Foundation
 
 ```
 
