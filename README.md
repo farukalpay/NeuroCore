@@ -4,7 +4,16 @@ NeuroCore is a high-performance, native macOS utility designed for structural bi
 
 If you find this tool useful for reverse engineering or security research, please consider starring the repository.
 
-//..
+### Visual Analysis Example
+
+![JSON Data Structure Analysis](https://github.com/farukalpay/NeuroCore/blob/main/img/img1.png?raw=true)
+
+**Case Study: Large Structured JSON**
+In the screenshot above, NeuroCore is inspecting a 17.7 MB file identified as "Unknown Binary" by the OS, but revealed to be structured text by the visualizer.
+
+* **The Color (Entropy 2.12):** The dominant **green/teal coloration** indicates low-to-mid entropy. Unlike encrypted data or compressed archives—which would render as high-entropy "red noise"—this file generates a calm, cool spectrum. This signals that the data contains high redundancy and predictable patterns.
+* **The Pattern:** The distinct, blocky textures on the Hilbert Curve are characteristic of **pretty-printed text**. The solid regions represent repeated sequences (such as whitespace indentation or recurring keys), while the scattered pixels represent variable data values.
+* **The Insight:** Even without reading the hex preview, the visual topography instantly confirms this is a **non-compressed, hierarchical text file** (in this case, a massive JSON dataset) rather than a compiled executable or random binary blob.
 
 ## Overview
 
